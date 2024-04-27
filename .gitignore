@@ -70,3 +70,6 @@ docs/_build/
 
 # Pyenv
 .python-version
+
+# Cargo.lock, maybe checked in again later, but currently just annoying to keep updated
+Cargo.lock
