@@ -73,3 +73,8 @@ docs/_build/
 
 # Cargo.lock, maybe checked in again later, but currently just annoying to keep updated
 Cargo.lock
+
+# LaTeX stuff
+report/*.aux
+report/*.log
+report/*.pdf

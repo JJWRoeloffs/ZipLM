@@ -7,3 +7,9 @@ The challange is to train a Language Model on an amount of data that is realisti
 ### Running the project
 
 The project is developed on python 3.11 and Rust 1.75, so, to run, install both on your system. After that, you should create a virtual envoirement, activate it, and install [maturin](https://pypi.org/project/maturin/) trough pip. After this, you can instll the project to your venv by running `maturin develop`
+
+The project is developed and tested on Linux. It working on any other system is accidental.
+
+### Building the report
+
+The report is written in basic LaTeX with very few extensions, so on most systems with `pdflatex` installed, you should be able to run `pdflatex ./report/main.tex`
