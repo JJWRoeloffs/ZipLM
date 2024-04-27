@@ -78,3 +78,6 @@ Cargo.lock
 report/*.aux
 report/*.log
 report/*.pdf
+
+# Dataset
+data/
