@@ -1,0 +1,3 @@
+[submodule "blimp"]
+	path = blimp
+	url = https://github.com/alexwarstadt/blimp.git
