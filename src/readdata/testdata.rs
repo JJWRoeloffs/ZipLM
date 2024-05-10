@@ -1,4 +1,4 @@
-use crate::utils::Res;
+use crate::utils::{Corpus, Res};
 use std::fs;
 use std::path::Path;
 
@@ -10,6 +10,38 @@ pub struct DataItems<T> {
     pub subtitiles: T,
     pub simple_wiki: T,
     pub switchboard: T,
+}
+
+impl DataItems<Vec<String>> {
+    pub fn from_dir(path: &Path) -> Res<DataItems<Vec<String>>> {
+        let items = read_dataitems_from_dir(path)?;
+        Ok(DataItems {
+            bnc_spoken: parse_corpus(&items.bnc_spoken, parse_bnc_spoken),
+            childes: parse_corpus(&items.childes, parse_childes),
+            gutenberg: parse_corpus(&items.gutenberg, parse_gutenberg),
+            subtitiles: parse_corpus(&items.subtitiles, parse_open_subtitles),
+            simple_wiki: parse_corpus(&items.simple_wiki, parse_simple_wiki),
+            switchboard: parse_corpus(&items.switchboard, parse_switchboard),
+        })
+    }
+
+    pub fn to_corpus(mut self) -> Corpus<Vec<String>> {
+        let mut items = Vec::with_capacity(
+            self.bnc_spoken.len()
+                + self.childes.len()
+                + self.gutenberg.len()
+                + self.subtitiles.len()
+                + self.simple_wiki.len()
+                + self.switchboard.len(),
+        );
+        items.append(&mut self.bnc_spoken);
+        items.append(&mut self.gutenberg);
+        items.append(&mut self.subtitiles);
+        items.append(&mut self.simple_wiki);
+        items.append(&mut self.switchboard);
+
+        Corpus { items }
+    }
 }
 
 #[inline(always)]
@@ -53,11 +85,13 @@ pub fn read_dataitems_from_dir(path: &Path) -> Res<DataItems<String>> {
     Ok(data_items)
 }
 
+#[inline(always)]
 fn parse_switchboard(s: &str) -> Option<&str> {
     // Removes "A:\t"
     s.get(3..)
 }
 
+#[inline(always)]
 fn parse_simple_wiki(s: &str) -> Option<&str> {
     // Ignore empty strings, and strings starting with =
     match s.chars().next() {
@@ -67,10 +101,12 @@ fn parse_simple_wiki(s: &str) -> Option<&str> {
     }
 }
 
+#[inline(always)]
 fn parse_open_subtitles(s: &str) -> Option<&str> {
     Some(s)
 }
 
+#[inline(always)]
 fn parse_gutenberg(s: &str) -> Option<&str> {
     // Ignore all strings with not alphabetic chars (that includes empties),
     // and all strings of which all alphabetic chars are caps (e.g. "= = = PG45447 = = =")
@@ -84,6 +120,7 @@ fn parse_gutenberg(s: &str) -> Option<&str> {
     }
 }
 
+#[inline(always)]
 fn parse_childes(s: &str) -> Option<&str> {
     // Only get actual spoken data, not tokens surrounding
     match s.chars().next() {
@@ -93,25 +130,15 @@ fn parse_childes(s: &str) -> Option<&str> {
     }
 }
 
+#[inline(always)]
 fn parse_bnc_spoken(s: &str) -> Option<&str> {
     Some(s)
 }
 
+#[inline(always)]
 fn parse_corpus<F>(s: &str, fun: F) -> Vec<String>
 where
     F: Fn(&str) -> Option<&str>,
 {
     s.lines().filter_map(fun).map(String::from).collect()
-}
-
-pub fn get_data(path: &Path) -> Res<DataItems<Vec<String>>> {
-    let items = read_dataitems_from_dir(path)?;
-    Ok(DataItems {
-        bnc_spoken: parse_corpus(&items.bnc_spoken, parse_bnc_spoken),
-        childes: parse_corpus(&items.childes, parse_childes),
-        gutenberg: parse_corpus(&items.gutenberg, parse_gutenberg),
-        subtitiles: parse_corpus(&items.subtitiles, parse_open_subtitles),
-        simple_wiki: parse_corpus(&items.simple_wiki, parse_simple_wiki),
-        switchboard: parse_corpus(&items.switchboard, parse_switchboard),
-    })
 }

@@ -1,3 +1,8 @@
-// When writing application code, you rarely care what the error is, just that one happened.
-// I could also just return Option everywhere, but I like this better.
+// When writing application courn Option everywhere, but I like this better.
 pub type Res<T> = Result<T, ()>;
+
+// The most simple type of corpus there could be, just a list of sentences.
+#[derive(Debug, Default)]
+pub struct Corpus<T: Default> {
+    pub items: T,
+}

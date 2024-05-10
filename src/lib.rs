@@ -1,5 +1,6 @@
 use pyo3::prelude::*;
 
+pub mod ngrams;
 pub mod readdata;
 pub mod utils;
 
