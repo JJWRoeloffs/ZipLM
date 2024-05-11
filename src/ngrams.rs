@@ -74,7 +74,7 @@ impl Coord {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct NGramModel {
     data: Vec<Vec<Token>>,
     lookup: HashMap<Token, Vec<Coord>>,
@@ -150,5 +150,133 @@ impl NGramModel {
             res += (top / bot).log10()
         }
         res
+    }
+}
+
+pub mod python {
+    #![allow(unused)]
+    use super::*;
+    use crate::utils::python::*;
+    use pyo3::{exceptions::PyValueError, prelude::*};
+
+    #[pyclass]
+    #[derive(Debug, PartialEq, Eq, Clone)]
+    pub enum PyTokenKind {
+        Lemma = 0,
+        Boundry = 1,
+        Unknown = 2,
+    }
+    #[pyfunction]
+    pub fn tokenkind_from_str(string: String) -> PyResult<PyTokenKind> {
+        match string.as_str() {
+            "lemma" => Ok(PyTokenKind::Lemma),
+            "boundry" => Ok(PyTokenKind::Boundry),
+            "unknown" => Ok(PyTokenKind::Unknown),
+            _ => Err(PyValueError::new_err("{string} is not a Token Kind")),
+        }
+    }
+
+    #[pyclass(get_all, set_all)]
+    #[derive(Debug, PartialEq, Eq, Clone)]
+    pub struct PyToken {
+        pub kind: PyTokenKind,
+        pub data: String,
+    }
+    impl PyToken {
+        fn new(kind: PyTokenKind, data: String) -> Self {
+            Self { kind, data }
+        }
+        #[inline(always)]
+        fn from_token(token: Token) -> Self {
+            match token {
+                Token::Lemma(data) => Self::new(PyTokenKind::Lemma, data),
+                Token::Unknown => Self::new(PyTokenKind::Unknown, "".to_owned()),
+                Token::Boundry => Self::new(PyTokenKind::Boundry, "".to_owned()),
+            }
+        }
+        #[inline(always)]
+        fn to_token(self) -> Token {
+            match self.kind {
+                PyTokenKind::Lemma => Token::Lemma(self.data),
+                PyTokenKind::Boundry => Token::Boundry,
+                PyTokenKind::Unknown => Token::Unknown,
+            }
+        }
+    }
+
+    create_pycorpus!(PyCorpusTokens, Vec<Vec<PyToken>>);
+
+    #[pyfunction]
+    pub fn tokenize_pycorpus(sentences: &PyCorpusSentences) -> PyCorpusTokens {
+        let tokens = Token::tokenize_corpus(sentences.inner.clone());
+        let pytokens = tokens
+            .items
+            .into_iter()
+            .map(|inner| inner.into_iter().map(PyToken::from_token).collect())
+            .collect::<Vec<Vec<PyToken>>>();
+
+        PyCorpusTokens::new(pytokens)
+    }
+
+    #[pyfunction]
+    pub fn pytokenize(sentence: String) -> Vec<PyToken> {
+        Token::tokenize(sentence)
+            .into_iter()
+            .map(PyToken::from_token)
+            .collect()
+    }
+
+    #[pyclass]
+    #[derive(Debug, PartialEq, Eq, Clone)]
+    pub struct PyNGramModel {
+        inner: NGramModel,
+    }
+
+    #[pymethods]
+    impl PyNGramModel {
+        #[new]
+        pub fn new(data: &PyCorpusTokens, n: usize) -> Self {
+            let tokens = data
+                .inner
+                .clone()
+                .items
+                .into_iter()
+                .map(|inner| inner.into_iter().map(PyToken::to_token).collect())
+                .collect::<Vec<Vec<Token>>>();
+
+            Self {
+                inner: NGramModel::new(tokens, n),
+            }
+        }
+
+        pub fn sanitize(&self, data: Vec<PyToken>) -> Vec<PyToken> {
+            data.into_iter()
+                .map(
+                    |token| match self.inner.vocab_contains(&token.clone().to_token()) {
+                        true => token,
+                        false => PyToken::new(PyTokenKind::Unknown, "".into()),
+                    },
+                )
+                .collect()
+        }
+
+        pub fn get_log_likelyhood(&self, data: Vec<PyToken>) -> f64 {
+            let tokens = data.into_iter().map(PyToken::to_token).collect();
+            self.inner.get_log_likelyhood(&tokens)
+        }
+    }
+
+    pub fn register_ngrams_module(parent: &Bound<'_, PyModule>) -> PyResult<()> {
+        let ngrams_mod = PyModule::new_bound(parent.py(), "ngrams")?;
+        ngrams_mod.add_class::<PyToken>()?;
+        ngrams_mod.add_class::<PyTokenKind>()?;
+        ngrams_mod.add_class::<PyCorpusTokens>()?;
+        ngrams_mod.add_function(wrap_pyfunction!(tokenkind_from_str, &ngrams_mod)?)?;
+        ngrams_mod.add_function(wrap_pyfunction!(tokenize_pycorpus, &ngrams_mod)?)?;
+        ngrams_mod.add_function(wrap_pyfunction!(pytokenize, &ngrams_mod)?)?;
+        ngrams_mod.add_class::<PyNGramModel>()?;
+
+        parent.add_submodule(&ngrams_mod)?;
+        Ok(())
     }
 }

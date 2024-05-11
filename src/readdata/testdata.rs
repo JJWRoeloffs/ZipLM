@@ -142,3 +142,18 @@ where
 {
     s.lines().filter_map(fun).map(String::from).collect()
 }
+
+pub mod python {
+    #![allow(unused)]
+    use super::*;
+    use crate::utils::python::PyCorpusSentences;
+    use pyo3::{exceptions::PyIOError, prelude::*};
+
+    #[pyfunction]
+    pub fn get_sentence_corpus(path: String) -> PyResult<PyCorpusSentences> {
+        let inner = DataItems::from_dir(Path::new(&path))
+            .map_err(|_| PyIOError::new_err(format!("Could not read from {path}")))?
+            .to_corpus();
+        Ok(PyCorpusSentences { inner })
+    }
+}
