@@ -15,10 +15,10 @@ impl Token {
         sentence
             .chars()
             .filter(|c| c.is_alphanumeric() || c.is_whitespace())
+            .flat_map(|c| c.to_lowercase())
             .collect::<String>()
             .split_whitespace()
-            .map(str::to_owned)
-            .map(|lemma| Token::Lemma(lemma))
+            .map(|lemma| Token::Lemma(lemma.to_owned()))
             .collect()
     }
 
