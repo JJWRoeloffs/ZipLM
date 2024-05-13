@@ -166,6 +166,18 @@ pub mod python {
         Boundry = 1,
         Unknown = 2,
     }
+    #[pymethods]
+    impl PyTokenKind {
+        #[new]
+        fn new(from: usize) -> PyResult<Self> {
+            match from {
+                0 => Ok(Self::Lemma),
+                1 => Ok(Self::Boundry),
+                2 => Ok(Self::Unknown),
+                _ => Err(PyValueError::new_err("{from} is not a PyTokenKind")),
+            }
+        }
+    }
     #[pyfunction]
     pub fn tokenkind_from_str(string: String) -> PyResult<PyTokenKind> {
         match string.as_str() {
@@ -176,22 +188,36 @@ pub mod python {
         }
     }
 
-    #[pyclass(get_all, set_all)]
+    #[pyclass(get_all)]
     #[derive(Debug, PartialEq, Eq, Clone)]
     pub struct PyToken {
         pub kind: PyTokenKind,
         pub data: String,
     }
+    #[pymethods]
     impl PyToken {
-        fn new(kind: PyTokenKind, data: String) -> Self {
+        #[new]
+        fn new(kind: PyTokenKind, data: String) -> PyResult<Self> {
+            match (&kind, data.as_str()) {
+                (PyTokenKind::Boundry, "") => Ok(Self { kind, data }),
+                (PyTokenKind::Unknown, "") => Ok(Self { kind, data }),
+                (PyTokenKind::Lemma, string) if string.chars().all(|c| c.is_alphanumeric()) => {
+                    Ok(Self { kind, data })
+                }
+                (_, _) => Err(PyValueError::new_err("{data} is not valid token data")),
+            }
+        }
+    }
+    impl PyToken {
+        fn new_rs(kind: PyTokenKind, data: String) -> Self {
             Self { kind, data }
         }
         #[inline(always)]
         fn from_token(token: Token) -> Self {
             match token {
-                Token::Lemma(data) => Self::new(PyTokenKind::Lemma, data),
-                Token::Unknown => Self::new(PyTokenKind::Unknown, "".to_owned()),
-                Token::Boundry => Self::new(PyTokenKind::Boundry, "".to_owned()),
+                Token::Lemma(data) => Self::new_rs(PyTokenKind::Lemma, data),
+                Token::Unknown => Self::new_rs(PyTokenKind::Unknown, "".to_owned()),
+                Token::Boundry => Self::new_rs(PyTokenKind::Boundry, "".to_owned()),
             }
         }
         #[inline(always)]
@@ -254,7 +280,7 @@ pub mod python {
                 .map(
                     |token| match self.inner.vocab_contains(&token.clone().to_token()) {
                         true => token,
-                        false => PyToken::new(PyTokenKind::Unknown, "".into()),
+                        false => PyToken::new_rs(PyTokenKind::Unknown, "".into()),
                     },
                 )
                 .collect()
