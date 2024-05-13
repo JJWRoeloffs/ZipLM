@@ -44,7 +44,7 @@ class TestWithCorpus:
         model = baby_lm.ngrams.PyNGramModel(corpus, 3)
         tokens = model.sanitize(baby_lm.ngrams.pytokenize("This unknown"))
 
-        assert tokens[0].data == "This"
+        assert tokens[0].data == "this"
         assert tokens[0].kind == baby_lm.ngrams.tokenkind_from_str("lemma")
         assert tokens[1].data == ""
         assert tokens[1].kind == baby_lm.ngrams.tokenkind_from_str("unknown")
