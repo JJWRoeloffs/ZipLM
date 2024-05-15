@@ -1,4 +1,4 @@
-from baby_lm.utils import PyCorpusSentences
+from zip_lm.utils import PyCorpusSentences
 
 
 def test_pycorpussents():

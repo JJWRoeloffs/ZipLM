@@ -1,4 +1,4 @@
-from baby_lm.readdata import BlimpPyItem, get_blimp_data, get_sentence_corpus
+from zip_lm.readdata import BlimpPyItem, get_blimp_data, get_sentence_corpus
 
 
 def test_get_blimpdata():

@@ -1,5 +1,5 @@
 import pytest
-from baby_lm.ngrams import (
+from zip_lm.ngrams import (
     PyTokenKind,
     PyToken,
     pytokenize,
@@ -7,7 +7,7 @@ from baby_lm.ngrams import (
     tokenkind_from_str,
     PyNGramModel,
 )
-from baby_lm.utils import PyCorpusSentences
+from zip_lm.utils import PyCorpusSentences
 
 
 def test_tokenkind():

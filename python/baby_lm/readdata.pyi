@@ -1,5 +1,5 @@
 from typing import List
-from baby_lm.utils import PyCorpusSentences
+from zip_lm.utils import PyCorpusSentences
 
 class BlimpPyItem:
     sentence_good: str

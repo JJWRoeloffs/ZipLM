@@ -1,7 +1,7 @@
 import enum
 from typing import List
 
-from baby_lm.utils import PyCorpusSentences
+from zip_lm.utils import PyCorpusSentences
 
 class PyNGramModel:
     def __init__(self, data: PyCorpusTokens, n: int) -> None: ...
