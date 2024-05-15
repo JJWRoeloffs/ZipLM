@@ -12,6 +12,7 @@ pub(crate) fn add_submodule(
     parent
         .py()
         .import_bound("sys")?
+        .getattr("modules")?
         // parent.name()? doesn't work, as that would be `zip_lm.zip_lm`
         .set_item(format!("zip_lm.{}", child.name()?), child)?;
     Ok(())
