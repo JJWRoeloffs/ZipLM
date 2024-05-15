@@ -17,7 +17,7 @@ pub mod python {
     use super::*;
     use pyo3::prelude::*;
 
-    pub fn register_readdata_module(parent: &Bound<'_, PyModule>) -> PyResult<()> {
+    pub(crate) fn register_readdata_module(parent: &Bound<'_, PyModule>) -> PyResult<()> {
         use blimp::python::*;
         use testdata::python::*;
         let data_mod = PyModule::new_bound(parent.py(), "readdata")?;
@@ -25,7 +25,7 @@ pub mod python {
         data_mod.add_class::<BlimpPyItem>()?;
         data_mod.add_function(wrap_pyfunction!(get_sentence_corpus, &data_mod)?)?;
 
-        parent.add_submodule(&data_mod)?;
+        crate::add_submodule(parent, &data_mod)?;
         Ok(())
     }
 }

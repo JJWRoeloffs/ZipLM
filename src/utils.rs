@@ -37,11 +37,11 @@ pub mod python {
 
     create_pycorpus!(PyCorpusSentences, Vec<String>);
 
-    pub fn register_utils_module(parent: &Bound<'_, PyModule>) -> PyResult<()> {
+    pub(crate) fn register_utils_module(parent: &Bound<'_, PyModule>) -> PyResult<()> {
         let utils_mod = PyModule::new_bound(parent.py(), "utils")?;
         utils_mod.add_class::<PyCorpusSentences>()?;
 
-        parent.add_submodule(&utils_mod)?;
+        crate::add_submodule(parent, &utils_mod)?;
         Ok(())
     }
 }

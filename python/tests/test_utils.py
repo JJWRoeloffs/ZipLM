@@ -1,4 +1,4 @@
-import baby_lm
+from baby_lm.utils import PyCorpusSentences
 
 
 def test_pycorpussents():
@@ -7,5 +7,5 @@ def test_pycorpussents():
         "This is another test sentence.",
         "This is a third test sentence.",
     ]
-    corpus = baby_lm.utils.PyCorpusSentences(items)
+    corpus = PyCorpusSentences(items)
     assert corpus.items() == items

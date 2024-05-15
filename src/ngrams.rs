@@ -292,7 +292,7 @@ pub mod python {
         }
     }
 
-    pub fn register_ngrams_module(parent: &Bound<'_, PyModule>) -> PyResult<()> {
+    pub(crate) fn register_ngrams_module(parent: &Bound<'_, PyModule>) -> PyResult<()> {
         let ngrams_mod = PyModule::new_bound(parent.py(), "ngrams")?;
         ngrams_mod.add_class::<PyToken>()?;
         ngrams_mod.add_class::<PyTokenKind>()?;
@@ -302,7 +302,7 @@ pub mod python {
         ngrams_mod.add_function(wrap_pyfunction!(pytokenize, &ngrams_mod)?)?;
         ngrams_mod.add_class::<PyNGramModel>()?;
 
-        parent.add_submodule(&ngrams_mod)?;
+        crate::add_submodule(parent, &ngrams_mod)?;
         Ok(())
     }
 }
