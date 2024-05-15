@@ -10,6 +10,8 @@ use utils::Res;
 mod ngrams;
 use ngrams::{NGramModel, Token};
 
+mod python;
+
 fn main() -> Res<()> {
     // let mut _train100 = DataItems::from_dir(Path::new("data/train_100M"))?;
     let train10 = DataItems::from_dir(Path::new("data/train_100M"))?.to_corpus();

@@ -25,7 +25,7 @@ pub mod python {
         data_mod.add_class::<BlimpPyItem>()?;
         data_mod.add_function(wrap_pyfunction!(get_sentence_corpus, &data_mod)?)?;
 
-        crate::add_submodule(parent, &data_mod)?;
+        crate::python::add_submodule(parent, &data_mod)?;
         Ok(())
     }
 }

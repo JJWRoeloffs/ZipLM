@@ -302,7 +302,7 @@ pub mod python {
         ngrams_mod.add_function(wrap_pyfunction!(pytokenize, &ngrams_mod)?)?;
         ngrams_mod.add_class::<PyNGramModel>()?;
 
-        crate::add_submodule(parent, &ngrams_mod)?;
+        crate::python::add_submodule(parent, &ngrams_mod)?;
         Ok(())
     }
 }

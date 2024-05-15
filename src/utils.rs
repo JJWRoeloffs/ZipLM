@@ -41,7 +41,7 @@ pub mod python {
         let utils_mod = PyModule::new_bound(parent.py(), "utils")?;
         utils_mod.add_class::<PyCorpusSentences>()?;
 
-        crate::add_submodule(parent, &utils_mod)?;
+        crate::python::add_submodule(parent, &utils_mod)?;
         Ok(())
     }
 }
