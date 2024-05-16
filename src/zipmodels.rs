@@ -7,7 +7,6 @@ use rayon::prelude::*;
 use std::cmp;
 use std::f64::consts::E;
 use std::io::Write;
-use std::marker::Sync;
 use std::time::Instant;
 
 #[inline(always)]
@@ -60,15 +59,17 @@ fn cashe_compressed(items: Vec<Vec<u8>>) -> Vec<(usize, Vec<u8>)> {
         .collect()
 }
 
-#[derive(Debug)]
-pub struct BootstrapZipModel<F: Fn(Vec<NonNanF64>) -> NonNanF64> {
+pub type LocFunc = fn(Vec<NonNanF64>) -> NonNanF64;
+
+#[derive(Debug, Clone)]
+pub struct BootstrapZipModel {
     items: Vec<(usize, Vec<u8>)>,
     tstar: Vec<NonNanF64>,
-    t: F,
+    t: LocFunc,
 }
 
-impl<F: Fn(Vec<NonNanF64>) -> NonNanF64 + Sync> BootstrapZipModel<F> {
-    pub fn new<R>(items: Vec<Vec<u8>>, b: usize, n: usize, t: F, rng: &mut R) -> Self
+impl BootstrapZipModel {
+    pub fn new<R>(items: Vec<Vec<u8>>, b: usize, n: usize, t: LocFunc, rng: &mut R) -> Self
     where
         R: Rng + ?Sized,
     {
@@ -102,15 +103,15 @@ impl<F: Fn(Vec<NonNanF64>) -> NonNanF64 + Sync> BootstrapZipModel<F> {
     }
 }
 
-#[derive(Debug)]
-pub struct SoftmaxZipModel<F: Fn(Vec<NonNanF64>) -> NonNanF64 + Sync> {
+#[derive(Debug, Clone)]
+pub struct SoftmaxZipModel {
     pub items: Vec<(usize, Vec<u8>)>,
     pub softmax: f64,
-    pub t: F,
+    pub t: LocFunc,
 }
 
-impl<F: Fn(Vec<NonNanF64>) -> NonNanF64 + Sync> SoftmaxZipModel<F> {
-    pub fn new<R>(items: Vec<Vec<u8>>, sample_size: usize, t: F, rng: &mut R) -> Self
+impl SoftmaxZipModel {
+    pub fn new<R>(items: Vec<Vec<u8>>, sample_size: usize, t: LocFunc, rng: &mut R) -> Self
     where
         R: Rng + ?Sized,
     {
@@ -139,5 +140,88 @@ impl<F: Fn(Vec<NonNanF64>) -> NonNanF64 + Sync> SoftmaxZipModel<F> {
         let distances = get_distances(&self.items, &(get_compressed_size(sentence), sentence));
         println!("Calcualted Log Likelyhood in: {:.2?}", before.elapsed());
         (E.powf((self.t)(distances).value()) / self.softmax).log10()
+    }
+}
+
+pub mod python {
+    #![allow(unused)]
+    use super::*;
+    use crate::utils::python::*;
+    use crate::utils::Corpus;
+    use pyo3::{exceptions::PyValueError, prelude::*};
+
+    fn quant_from_index(t_type: usize) -> PyResult<LocFunc> {
+        match t_type {
+            0 => Ok(|xs| NonNanF64::mean(xs)),
+            1 => Ok(|xs| NonNanF64::quantile(xs, 0.25)),
+            2 => Ok(|xs| NonNanF64::quantile(xs, 0.50)),
+            3 => Ok(|xs| NonNanF64::quantile(xs, 0.75)),
+            _ => Err(PyValueError::new_err("{t} is not a valid function type")),
+        }
+    }
+
+    create_pycorpus!(PyCorpusBytes, Vec<Vec<u8>>);
+
+    #[pyfunction]
+    pub fn bytes_pycorpus(sentences: &PyCorpusSentences) -> PyCorpusBytes {
+        let items = sentences
+            .items()
+            .iter()
+            .map(|string| string.as_bytes().to_vec())
+            .collect();
+        PyCorpusBytes::new(items)
+    }
+
+    #[pyclass]
+    #[derive(Debug, Clone)]
+    pub struct PyBootstrapZipModel {
+        inner: BootstrapZipModel,
+    }
+
+    #[pymethods]
+    impl PyBootstrapZipModel {
+        #[new]
+        pub fn new(items: PyCorpusBytes, b: usize, n: usize, t_type: usize) -> PyResult<Self> {
+            let mut rng = rand::thread_rng();
+            let t = quant_from_index(t_type)?;
+
+            let inner = BootstrapZipModel::new(items.items(), b, n, t, &mut rng);
+            Ok(Self { inner })
+        }
+        pub fn get_log_likelyhood(&self, items: Vec<u8>) -> f64 {
+            self.inner.get_log_likelyhood(&items)
+        }
+    }
+
+    #[pyclass]
+    #[derive(Debug, Clone)]
+    pub struct PySoftmaxZipModel {
+        inner: SoftmaxZipModel,
+    }
+
+    #[pymethods]
+    impl PySoftmaxZipModel {
+        #[new]
+        pub fn new(items: PyCorpusBytes, sample_size: usize, t_type: usize) -> PyResult<Self> {
+            let mut rng = rand::thread_rng();
+            let t = quant_from_index(t_type)?;
+
+            let inner = SoftmaxZipModel::new(items.items(), sample_size, t, &mut rng);
+            Ok(Self { inner })
+        }
+        pub fn get_log_likelyhood(&self, items: Vec<u8>) -> f64 {
+            self.inner.get_log_likelyhood(&items)
+        }
+    }
+
+    pub(crate) fn register_zipmodels_module(parent: &Bound<'_, PyModule>) -> PyResult<()> {
+        let zipmodels_mod = PyModule::new_bound(parent.py(), "zipmodels")?;
+        zipmodels_mod.add_class::<PyCorpusBytes>()?;
+        zipmodels_mod.add_function(wrap_pyfunction!(bytes_pycorpus, &zipmodels_mod)?)?;
+        zipmodels_mod.add_class::<PyBootstrapZipModel>()?;
+        zipmodels_mod.add_class::<PySoftmaxZipModel>()?;
+
+        crate::python::add_submodule(parent, &zipmodels_mod)?;
+        Ok(())
     }
 }

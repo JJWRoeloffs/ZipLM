@@ -47,6 +47,7 @@ pub mod python {
     macro_rules! create_pycorpus {
         ($name: ident, $type: ty) => {
             #[pyclass]
+            #[derive(Debug, Clone)]
             pub struct $name {
                 pub inner: Corpus<$type>,
             }
