@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use std::path::Path;
 
 mod readdata;
@@ -5,14 +7,19 @@ use readdata::blimp;
 use readdata::testdata::DataItems;
 
 mod utils;
-use utils::Res;
+use utils::{NonNanF64, Res};
 
 mod ngrams;
 use ngrams::{NGramModel, Token};
+use zipmodels::BootstrapZipModel;
+
+use crate::zipmodels::SoftmaxZipModel;
 
 mod python;
 
-fn main() -> Res<()> {
+mod zipmodels;
+
+fn main2() -> Res<()> {
     // let mut _train100 = DataItems::from_dir(Path::new("data/train_100M"))?;
     let train10 = DataItems::from_dir(Path::new("data/train_100M"))?.to_corpus();
     println!("test0");
@@ -38,5 +45,28 @@ fn main() -> Res<()> {
     // let mut _test = DataItems::from_dir(Path::new("data/test"))?;
 
     // let mut _blimps = blimp::read_blimpitems_from_dir(Path::new("blimp/data"))?;
+    Ok(())
+}
+
+fn main() -> Res<()> {
+    let train10 = DataItems::from_dir(Path::new("data/train_10M"))?.to_corpus();
+    let data = train10
+        .items
+        .into_iter()
+        .map(|sent| sent.into_bytes())
+        .collect::<Vec<Vec<u8>>>();
+
+    let mut rng = rand::thread_rng();
+
+    let t = |xs| NonNanF64::quantile(xs, 0.75);
+    let bootstrap_zip_model = SoftmaxZipModel::new(data, 10, t, &mut rng);
+
+    let test_sentence1 = "This is a test sentence".as_bytes();
+    let test_sentence1 = "This is also a test sentence".as_bytes();
+    let test_sentence1 = "This is another, better test sentence".as_bytes();
+
+    let base: f64 = 10.0;
+    dbg!(base.powf(bootstrap_zip_model.get_log_likelyhood(&test_sentence1)));
+
     Ok(())
 }

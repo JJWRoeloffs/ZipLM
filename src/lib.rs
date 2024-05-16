@@ -4,6 +4,7 @@ pub mod ngrams;
 pub(crate) mod python;
 pub mod readdata;
 pub mod utils;
+pub mod zipmodels;
 
 #[pymodule]
 fn zip_lm(_py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
