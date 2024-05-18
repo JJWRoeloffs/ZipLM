@@ -1,4 +1,4 @@
-use crate::utils::NonNanF64;
+use crate::utils::{LanguageModel, NonNanF64};
 use flate2::write::ZlibEncoder;
 use flate2::Compression;
 use rand::seq::SliceRandom;
@@ -127,6 +127,12 @@ impl BootstrapZipModel {
     }
 }
 
+impl LanguageModel for BootstrapZipModel {
+    fn get_log_likelyhood_sentence(&self, sentence: &str) -> f64 {
+        self.get_log_likelyhood(sentence.as_bytes())
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct SoftmaxZipModel {
     pub items: Vec<(usize, Vec<u8>)>,
@@ -181,6 +187,12 @@ impl SoftmaxZipModel {
     }
 }
 
+impl LanguageModel for SoftmaxZipModel {
+    fn get_log_likelyhood_sentence(&self, sentence: &str) -> f64 {
+        self.get_log_likelyhood(sentence.as_bytes())
+    }
+}
+
 pub mod python {
     #![allow(unused)]
     use super::*;
@@ -213,7 +225,7 @@ pub mod python {
     #[pyclass]
     #[derive(Debug, Clone)]
     pub struct PyBootstrapZipModel {
-        inner: BootstrapZipModel,
+        pub inner: BootstrapZipModel,
     }
 
     #[pymethods]
@@ -234,7 +246,7 @@ pub mod python {
     #[pyclass]
     #[derive(Debug, Clone)]
     pub struct PySoftmaxZipModel {
-        inner: SoftmaxZipModel,
+        pub inner: SoftmaxZipModel,
     }
 
     #[pymethods]

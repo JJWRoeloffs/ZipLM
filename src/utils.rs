@@ -10,6 +10,10 @@ pub struct Corpus<T: Default + Clone> {
     pub items: T,
 }
 
+pub trait LanguageModel {
+    fn get_log_likelyhood_sentence(&self, sentence: &str) -> f64;
+}
+
 #[derive(PartialEq, PartialOrd, Debug, Default, Clone, Copy)]
 pub struct NonNanF64(f64);
 impl NonNanF64 {

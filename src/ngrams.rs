@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::utils::Corpus;
+use crate::utils::{Corpus, LanguageModel};
 
 // Pretty simple tokenizer for the N-grams. It's only a quick benchmark.
 #[derive(Debug, PartialEq, Eq, Clone, Hash)]
@@ -155,6 +155,13 @@ impl NGramModel {
     }
 }
 
+impl LanguageModel for NGramModel {
+    fn get_log_likelyhood_sentence(&self, sentence: &str) -> f64 {
+        let sentence = self.sanitize(Token::tokenize(sentence.to_owned()));
+        self.get_log_likelyhood(&sentence)
+    }
+}
+
 pub mod python {
     #![allow(unused)]
     use super::*;
@@ -257,7 +264,7 @@ pub mod python {
     #[pyclass]
     #[derive(Debug, PartialEq, Eq, Clone)]
     pub struct PyNGramModel {
-        inner: NGramModel,
+        pub inner: NGramModel,
     }
 
     #[pymethods]

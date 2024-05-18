@@ -1,6 +1,7 @@
 #![allow(unused)]
 
 use std::path::Path;
+use std::time::Instant;
 
 mod readdata;
 use readdata::blimp;
@@ -15,12 +16,12 @@ use zipmodels::BootstrapZipModel;
 
 use crate::zipmodels::SoftmaxZipModel;
 
+mod eval_utils;
 mod python;
-
 mod zipmodels;
 
 fn run_ngrams_model() -> Res<()> {
-    let train10 = DataItems::from_dir(Path::new("data/train_100M"))?.to_corpus();
+    let train10 = DataItems::from_dir(Path::new("data/train_10M"))?.to_corpus();
     let tokens = Token::tokenize_corpus(train10);
     let ngram_model = NGramModel::new(tokens.items, 2);
 
@@ -34,7 +35,9 @@ fn run_ngrams_model() -> Res<()> {
 
     let base: f64 = 10.0;
 
+    let before = Instant::now();
     dbg!(base.powf(ngram_model.get_log_likelyhood(&test_sentence1)));
+    println!("Calcualted Log Likelyhood in: {:.2?}", before.elapsed());
     dbg!(base.powf(ngram_model.get_log_likelyhood(&test_sentence2)));
     dbg!(base.powf(ngram_model.get_log_likelyhood(&test_sentence3)));
     Ok(())

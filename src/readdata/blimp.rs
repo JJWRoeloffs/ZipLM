@@ -59,7 +59,9 @@ pub mod python {
         fn to_python(self) -> BlimpPyItem {
             BlimpPyItem {
                 sentence_good: self.sentence_good,
+                ll_sentence_good: 0.0,
                 sentence_bad: self.sentence_bad,
+                ll_sentence_bad: 0.0,
                 field: self.field,
                 linguistics_term: self.linguistics_term,
                 uid: self.uid,
@@ -68,10 +70,14 @@ pub mod python {
         }
     }
 
+    // used for both reading data, and evaluation (with the log likelyhood values.)
+    #[derive(Debug, Clone)]
     #[pyclass(get_all, set_all)]
     pub struct BlimpPyItem {
         pub sentence_good: String,
+        pub ll_sentence_good: f64,
         pub sentence_bad: String,
+        pub ll_sentence_bad: f64,
         pub field: String,
         pub linguistics_term: String,
         pub uid: String,
@@ -83,7 +89,9 @@ pub mod python {
         #[new]
         fn new(
             sentence_good: String,
+            ll_sentence_good: f64,
             sentence_bad: String,
+            ll_sentence_bad: f64,
             field: String,
             linguistics_term: String,
             uid: String,
@@ -91,7 +99,9 @@ pub mod python {
         ) -> Self {
             Self {
                 sentence_good,
+                ll_sentence_good,
                 sentence_bad,
+                ll_sentence_bad,
                 field,
                 linguistics_term,
                 uid,

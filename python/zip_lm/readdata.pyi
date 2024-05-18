@@ -3,7 +3,9 @@ from zip_lm.utils import PyCorpusSentences
 
 class BlimpPyItem:
     sentence_good: str
+    ll_sentence_good: float
     sentence_bad: str
+    ll_sentence_bad: float
     field: str
     linguistics_term: str
     uid: str
@@ -11,7 +13,9 @@ class BlimpPyItem:
     def __init__(
         self,
         sentence_good: str,
+        ll_sentence_good: float,
         sentence_bad: str,
+        ll_sentence_bad: float,
         field: str,
         linguistics_term: str,
         uid: str,
