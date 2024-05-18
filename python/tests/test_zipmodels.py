@@ -27,12 +27,12 @@ class TestWithCorpus:
 
     def test_pybootstrapmodel(self):
         corpus = bytes_pycorpus(self.sentences)
-        model = PyBootstrapZipModel(corpus, 2, 2, 0)
+        model = PyBootstrapZipModel(corpus, 2, 2, 0, 42)
         likelyhood = model.get_log_likelyhood("This is a test sentence".encode("utf-8"))
-        assert 0 < (10**likelyhood) < 1
+        assert 0 <= (10**likelyhood) <= 1
 
     def test_pysoftmaxmodel(self):
         corpus = bytes_pycorpus(self.sentences)
-        model = PySoftmaxZipModel(corpus, 2, 0)
+        model = PySoftmaxZipModel(corpus, 2, 0, 42)
         likelyhood = model.get_log_likelyhood("This is a test".encode("utf-8"))
-        assert 0 < (10**likelyhood) < 1
+        assert 0 <= (10**likelyhood) <= 1

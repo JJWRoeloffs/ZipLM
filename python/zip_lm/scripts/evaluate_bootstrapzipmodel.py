@@ -1,6 +1,7 @@
 import sys
 import time
 import json
+import random
 import argparse
 from pathlib import Path
 from pprint import pprint
@@ -21,6 +22,7 @@ T_CONVERSION = {"mean": 0, "quarterq": 1, "halfq": 2, "threequarterq": 3}
 
 @dataclass
 class Args:
+    seed: int
     nr_per_type: int
     b: int
     n: int
@@ -33,6 +35,7 @@ def parse_args(args: List[str]) -> Args:
         prog="evaluate_ngrams",
         description="The script that does the evaluation of the ngrams model",
     )
+    parser.add_argument("seed", help="The seed to use for the rng")
     parser.add_argument("nr_per_type", help="The amount of blimp items to get per type")
     parser.add_argument("b", help="The b used in the bootstrap model")
     parser.add_argument("n", help="The n used in the bootstrap model")
@@ -55,6 +58,7 @@ def parse_args(args: List[str]) -> Args:
     )
     arguments = parser.parse_args(args)
     return Args(
+        int(arguments.seed),
         int(arguments.nr_per_type),
         int(arguments.b),
         int(arguments.n),
@@ -64,12 +68,14 @@ def parse_args(args: List[str]) -> Args:
 
 
 def run(args: Args) -> None:
+    random.seed(args.seed)
     before = time.time()
     model = PyBootstrapZipModel(
         bytes_pycorpus(get_training_data(args.data)),
         args.b,
         args.n,
         T_CONVERSION[args.t_type],
+        random.randint(0, 2147483647),
     )
     print(f"Trained SZ model with b={args.b}, n={args.n} with t={args.t_type}")
     print(f"on the {args.data} training set in {time.time() - before:.2f} seconds")

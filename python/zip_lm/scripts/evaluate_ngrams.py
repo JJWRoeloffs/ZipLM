@@ -1,6 +1,7 @@
 import sys
 import time
 import json
+import random
 import argparse
 from pathlib import Path
 from pprint import pprint
@@ -18,6 +19,7 @@ from typing import List, Literal
 
 @dataclass
 class Args:
+    seed: int
     nr_per_type: int
     n: int
     data: Literal["10M", "100M"]
@@ -28,6 +30,7 @@ def parse_args(args: List[str]) -> Args:
         prog="evaluate_ngrams",
         description="The script that does the evaluation of the ngrams model",
     )
+    parser.add_argument("seed", help="The seed to use for the rng")
     parser.add_argument("nr_per_type", help="The amount of blimp items to get per type")
     parser.add_argument("n", help="The n of the n-gram model")
     parser.add_argument(
@@ -40,10 +43,16 @@ def parse_args(args: List[str]) -> Args:
         required=False,
     )
     arguments = parser.parse_args(args)
-    return Args(int(arguments.nr_per_type), int(arguments.n), arguments.data)
+    return Args(
+        int(arguments.seed),
+        int(arguments.nr_per_type),
+        int(arguments.n),
+        arguments.data,
+    )
 
 
 def run(args: Args) -> None:
+    random.seed(args.seed)
     before = time.time()
     model = PyNGramModel(tokenize_pycorpus(get_training_data(args.data)), args.n)
     print(f"Trained NGram model with n={args.n}, on the {args.data} training set.")

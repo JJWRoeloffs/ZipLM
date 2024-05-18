@@ -1,3 +1,4 @@
+import random
 from pathlib import Path
 from collections import defaultdict
 
@@ -20,4 +21,5 @@ def get_testdata_subset(testdata: List[BlimpPyItem], nr_per: int) -> List[BlimpP
         if counts[(item.field, item.linguistics_term)] < nr_per:
             counts[(item.field, item.linguistics_term)] += 1
             newdata.append(item)
+    random.shuffle(newdata)
     return newdata

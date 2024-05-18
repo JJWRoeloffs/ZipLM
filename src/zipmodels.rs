@@ -199,6 +199,8 @@ pub mod python {
     use crate::utils::python::*;
     use crate::utils::Corpus;
     use pyo3::{exceptions::PyValueError, prelude::*};
+    use rand::SeedableRng;
+    use rand_pcg::Pcg32;
 
     fn quant_from_index(t_type: usize) -> PyResult<LocFunc> {
         match t_type {
@@ -231,8 +233,14 @@ pub mod python {
     #[pymethods]
     impl PyBootstrapZipModel {
         #[new]
-        pub fn new(items: PyCorpusBytes, b: usize, n: usize, t_type: usize) -> PyResult<Self> {
-            let mut rng = rand::thread_rng();
+        pub fn new(
+            items: PyCorpusBytes,
+            b: usize,
+            n: usize,
+            t_type: usize,
+            seed: u64,
+        ) -> PyResult<Self> {
+            let mut rng = Pcg32::seed_from_u64(seed);
             let t = quant_from_index(t_type)?;
 
             let inner = BootstrapZipModel::new(items.items(), b, n, t, &mut rng);
@@ -252,8 +260,13 @@ pub mod python {
     #[pymethods]
     impl PySoftmaxZipModel {
         #[new]
-        pub fn new(items: PyCorpusBytes, sample_size: usize, t_type: usize) -> PyResult<Self> {
-            let mut rng = rand::thread_rng();
+        pub fn new(
+            items: PyCorpusBytes,
+            sample_size: usize,
+            t_type: usize,
+            seed: u64,
+        ) -> PyResult<Self> {
+            let mut rng = Pcg32::seed_from_u64(seed);
             let t = quant_from_index(t_type)?;
 
             let inner = SoftmaxZipModel::new(items.items(), sample_size, t, &mut rng);

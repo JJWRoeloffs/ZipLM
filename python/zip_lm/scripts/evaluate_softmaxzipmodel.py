@@ -2,6 +2,7 @@ import sys
 import time
 import json
 import argparse
+import random
 from pathlib import Path
 from pprint import pprint
 from dataclasses import dataclass
@@ -21,6 +22,7 @@ T_CONVERSION = {"mean": 0, "quarterq": 1, "halfq": 2, "threequarterq": 3}
 
 @dataclass
 class Args:
+    seed: int
     nr_per_type: int
     sample_size: int
     t_type: T_TYPES
@@ -32,6 +34,7 @@ def parse_args(args: List[str]) -> Args:
         prog="evaluate_ngrams",
         description="The script that does the evaluation of the ngrams model",
     )
+    parser.add_argument("seed", help="The seed to use for the rng")
     parser.add_argument("nr_per_type", help="The amount of blimp items to get per type")
     parser.add_argument("sample_size", help="The sample size used in the softmax model")
     parser.add_argument(
@@ -53,6 +56,7 @@ def parse_args(args: List[str]) -> Args:
     )
     arguments = parser.parse_args(args)
     return Args(
+        int(arguments.seed),
         int(arguments.nr_per_type),
         int(arguments.sample_size),
         arguments.t,
@@ -61,11 +65,13 @@ def parse_args(args: List[str]) -> Args:
 
 
 def run(args: Args) -> None:
+    random.seed(args.seed)
     before = time.time()
     model = PySoftmaxZipModel(
         bytes_pycorpus(get_training_data(args.data)),
         args.sample_size,
         T_CONVERSION[args.t_type],
+        random.randint(0, 2147483647),
     )
     print(f"Trained SZ model with sample_size={args.sample_size} with t={args.t_type}")
     print(f"on the {args.data} training set in {time.time() - before:.2f} seconds")
