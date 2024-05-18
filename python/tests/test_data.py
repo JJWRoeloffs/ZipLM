@@ -10,7 +10,9 @@ def test_get_blimpdata():
 def test_blimpitem():
     item = BlimpPyItem(
         sentence_good="Some turtles alarm Kimberly",
+        ll_sentence_good=0,
         sentence_bad="Some turtles come here Kimberley",
+        ll_sentence_bad=0,
         field="syntax",
         linguistics_term="argument_structure",
         uid="transitive",
