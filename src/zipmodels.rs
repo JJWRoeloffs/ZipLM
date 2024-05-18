@@ -36,6 +36,10 @@ fn get_concat_size(first: &[u8], second: &[u8]) -> usize {
         .len()
 }
 
+/// The ncd formla taken verbatim from the Jiang et al paper.
+///
+/// This takes the compressed lengths of the first, the second, and the combined pieces of text
+/// and returns the ncd value.
 #[inline(always)]
 fn ncd(xlen: usize, ylen: usize, clen: usize) -> NonNanF64 {
     NonNanF64::new((clen - cmp::min(xlen, ylen)) as f64 / cmp::max(xlen, ylen) as f64)
@@ -61,6 +65,12 @@ fn cashe_compressed(items: Vec<Vec<u8>>) -> Vec<(usize, Vec<u8>)> {
 
 pub type LocFunc = fn(Vec<NonNanF64>) -> NonNanF64;
 
+// A "language model" that calculates the likelyhood making use of a bootstap statistical test
+// Technically, it doesn't calcualte log likelyhoods in the formal sence (hence the quotes),
+// Instead, it calcualtes the chance that a piece of text is from the same population as the
+// training data, by calculating the ncd between the training data, and comparing it to ncd from
+// the items in the training set to the new pice of text.
+// This means the log likelyhoods cannot be directly compared to those from any other model.
 #[derive(Debug, Clone)]
 pub struct BootstrapZipModel {
     items: Vec<(usize, Vec<u8>)>,
@@ -69,6 +79,14 @@ pub struct BootstrapZipModel {
 }
 
 impl BootstrapZipModel {
+    /// Create a new bootstrap model. With items, b, n, t, and some rng.
+    ///
+    /// b is the size of Tstar (in the traditional sense of a statistical bootstrap test)
+    /// n is the amount of items to pull from every xstar.
+    ///     Ideally, this would be `items.len()`, but this leads to long training times.
+    /// t is the location function to use for the bootratap test.
+    ///     If `n != items.len()`, this location metric must be equivilant on randome samples of the data.
+    /// rng is the Rng to use when doing the random sampling of the bootstrap test.
     pub fn new<R>(items: Vec<Vec<u8>>, b: usize, n: usize, t: LocFunc, rng: &mut R) -> Self
     where
         R: Rng + ?Sized,
@@ -91,6 +109,12 @@ impl BootstrapZipModel {
         Self { items, tstar, t }
     }
 
+    /// Calcualte the log likelyhood of a sentence.
+    ///
+    /// Keep in mind this is not a likelyhood in the traditional sense,
+    /// Instead, it calcualtes the chance that a piece of text is from the same population as the
+    /// training data, by calculating the ncd between the training data, and comparing it to ncd
+    /// from the items in the training set to the new pice of text.
     pub fn get_log_likelyhood(&self, sentence: &[u8]) -> f64 {
         let before = Instant::now();
         let distances = get_distances(&self.items, &(get_compressed_size(sentence), sentence));
@@ -111,6 +135,14 @@ pub struct SoftmaxZipModel {
 }
 
 impl SoftmaxZipModel {
+    /// Create a new softmax model. With items, sample_size, t, and some rng.
+    ///
+    /// the sample size is the amount of items to pick to aproximate the denominator of the
+    ///     softmax function. The quality of this aproximation does not matter when only comparing
+    ///     the results of this model to itself, so chosing a value as low as 10 could be fine.
+    ///     Keep in mind that this calculation can take up to a second per item to use.
+    /// the t is some location metric to use to agrevate the ncd-distrances.
+    /// the rng is the rng that is used to pick `sample_size` items from `items`.
     pub fn new<R>(items: Vec<Vec<u8>>, sample_size: usize, t: LocFunc, rng: &mut R) -> Self
     where
         R: Rng + ?Sized,
@@ -119,6 +151,13 @@ impl SoftmaxZipModel {
         let items = cashe_compressed(items);
         println!("Compressed individual items in: {:.2?}", before.elapsed());
 
+        // This is to calcualte the denominator of the softmax function,
+        // which is pre-computed as it stays the same for each log likelyhood.
+        // It has to be aproximated, as calcualting this score for every value in the training
+        // set is extreemly expencive (taking months on my machine)
+        // This approximation does not matter alot, tough: it is a constant devider, so
+        // it doesn't affect anything when comparing the likelyhoods with eachther,
+        // which, for now, is all that we do.
         let before = Instant::now();
         let sample_dists_sum = items
             .choose_multiple(rng, sample_size)
@@ -128,7 +167,6 @@ impl SoftmaxZipModel {
             .map(|(s, i, xs)| t(get_distances(xs, &(*s, i))).value())
             .map(|val| E.powf(val))
             .sum::<f64>();
-
         let softmax = sample_dists_sum * (items.len() as f64 / sample_size as f64);
         println!("Calculated Softmax den approx in: {:.2?}", before.elapsed());
 
