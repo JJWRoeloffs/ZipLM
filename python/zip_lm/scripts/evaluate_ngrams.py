@@ -70,6 +70,7 @@ def run(args: Args) -> None:
     print(f"Calculated lls with ngrams model in {time.time() - before:.2f} seconds")
 
     results = {
+        "seed": args.seed,
         "type": "PyNGramModel",
         "params": {
             "n": args.n,
