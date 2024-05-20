@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use crate::utils::{Corpus, LanguageModel};
+use std::f64::NEG_INFINITY;
 
 // Pretty simple tokenizer for the N-grams. It's only a quick benchmark.
 #[derive(Debug, PartialEq, Eq, Clone, Hash)]
@@ -79,11 +80,13 @@ pub struct NGramModel {
     data: Vec<Vec<Token>>,
     lookup: HashMap<Token, Vec<Coord>>,
     n: usize,
+    total_len: usize,
 }
 
 impl NGramModel {
     pub fn new(mut data: Vec<Vec<Token>>, n: usize) -> Self {
-        assert!(n >= 2, "Cannot make n-gram with n < 2");
+        let total_len = data.iter().map(|s| s.len()).sum();
+        assert!(n >= 1, "Cannot make n-gram with n < 1");
         for sentence in data.iter_mut() {
             Token::pad_sentence(sentence, n - 1)
         }
@@ -103,7 +106,12 @@ impl NGramModel {
             }
         }
 
-        Self { data, lookup, n }
+        Self {
+            data,
+            lookup,
+            n,
+            total_len,
+        }
     }
 
     pub fn vocab_contains(&self, token: &Token) -> bool {
@@ -140,7 +148,7 @@ impl NGramModel {
         count
     }
 
-    pub fn get_log_likelyhood(&self, sentence: &Vec<Token>) -> f64 {
+    fn get_ll_many(&self, sentence: &Vec<Token>) -> f64 {
         // This uses the common approximation that
         // P(W1, W2, ..., Wn) ~ C(W1, W2, ..., Wn) / C(W2, ..., Wn)
         let mut padded_sentence = sentence.clone();
@@ -152,6 +160,25 @@ impl NGramModel {
             res += (top / bot).log10()
         }
         res
+    }
+
+    fn get_ll_one(&self, sentence: &Vec<Token>) -> f64 {
+        let mut res: f64 = 0.0;
+        for token in sentence {
+            if let Some(count) = self.lookup.get(&token) {
+                res += (count.len() as f64 / self.total_len as f64).log10();
+            } else {
+                return NEG_INFINITY;
+            }
+        }
+        res
+    }
+
+    pub fn get_log_likelyhood(&self, sentence: &Vec<Token>) -> f64 {
+        match self.n {
+            1 => self.get_ll_one(sentence),
+            _ => self.get_ll_many(sentence),
+        }
     }
 }
 
