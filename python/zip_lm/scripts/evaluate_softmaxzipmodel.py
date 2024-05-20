@@ -31,8 +31,8 @@ class Args:
 
 def parse_args(args: List[str]) -> Args:
     parser = argparse.ArgumentParser(
-        prog="evaluate_ngrams",
-        description="The script that does the evaluation of the ngrams model",
+        prog="evaluate_softmaxzipmodel",
+        description="The script that does the evaluation of the softmax model",
     )
     parser.add_argument("seed", help="The seed to use for the rng")
     parser.add_argument("nr_per_type", help="The amount of blimp items to get per type")
@@ -84,8 +84,8 @@ def run(args: Args) -> None:
     print(f"Testing on {len(inputdata)} Items")
 
     before = time.time()
-    ngram_lls = get_softmax_lls(model, inputdata)
-    print(f"Calculated lls with ngrams model in {time.time() - before:.2f} seconds")
+    lls = get_softmax_lls(model, inputdata)
+    print(f"Calculated lls with softmax model in {time.time() - before:.2f} seconds")
 
     results = {
         "seed": args.seed,
@@ -96,7 +96,7 @@ def run(args: Args) -> None:
         },
         "training_data": args.data,
         "evaluation_subset": args.nr_per_type,
-        "results": evaluate(ngram_lls),
+        "results": evaluate(lls),
     }
     pprint(results)
 

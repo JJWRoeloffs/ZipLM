@@ -32,8 +32,8 @@ class Args:
 
 def parse_args(args: List[str]) -> Args:
     parser = argparse.ArgumentParser(
-        prog="evaluate_ngrams",
-        description="The script that does the evaluation of the ngrams model",
+        prog="evaluate_bootsrtapzipmodel",
+        description="The script that does the evaluation of the bootstrap model",
     )
     parser.add_argument("seed", help="The seed to use for the rng")
     parser.add_argument("nr_per_type", help="The amount of blimp items to get per type")
@@ -77,7 +77,7 @@ def run(args: Args) -> None:
         T_CONVERSION[args.t_type],
         random.randint(0, 2147483647),
     )
-    print(f"Trained SZ model with b={args.b}, n={args.n} with t={args.t_type}")
+    print(f"Trained bootstrap model with b={args.b}, n={args.n} with t={args.t_type}")
     print(f"on the {args.data} training set in {time.time() - before:.2f} seconds")
 
     before = time.time()
@@ -88,12 +88,12 @@ def run(args: Args) -> None:
     print(f"Testing on {len(inputdata)} Items")
 
     before = time.time()
-    ngram_lls = get_bootstrap_lls(model, inputdata)
-    print(f"Calculated lls with ngrams model in {time.time() - before:.2f} seconds")
+    lls = get_bootstrap_lls(model, inputdata)
+    print(f"Calculated lls with bootstrap model in {time.time() - before:.2f} seconds")
 
     results = {
         "seed": args.seed,
-        "type": "PySoftmaxZipModel",
+        "type": "PyBootstrapZipModel",
         "params": {
             "b": args.b,
             "n": args.n,
@@ -101,14 +101,14 @@ def run(args: Args) -> None:
         },
         "training_data": args.data,
         "evaluation_subset": args.nr_per_type,
-        "results": evaluate(ngram_lls),
+        "results": evaluate(lls),
     }
     pprint(results)
 
     results_dir = Path() / "results"
     results_dir.mkdir(exist_ok=True)
 
-    results_file = results_dir / "softmaxzip.jsonl"
+    results_file = results_dir / "bootstrapzip.jsonl"
     with results_file.open("a", encoding="utf-8") as f:
         json.dump(results, f)
         f.write("\n")

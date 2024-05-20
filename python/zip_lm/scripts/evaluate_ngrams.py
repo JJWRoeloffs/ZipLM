@@ -66,7 +66,7 @@ def run(args: Args) -> None:
     print(f"Testing on {len(inputdata)} Items")
 
     before = time.time()
-    ngram_lls = get_ngrams_lls(model, inputdata)
+    lls = get_ngrams_lls(model, inputdata)
     print(f"Calculated lls with ngrams model in {time.time() - before:.2f} seconds")
 
     results = {
@@ -77,7 +77,7 @@ def run(args: Args) -> None:
         },
         "training_data": args.data,
         "evaluation_subset": args.nr_per_type,
-        "results": evaluate(ngram_lls),
+        "results": evaluate(lls),
     }
     pprint(results)
 
