@@ -7,7 +7,7 @@ from typing import Dict, List
 
 def evaluate(items: List[BlimpPyItem]) -> Dict[str, float]:
     golden = [True for _ in items]
-    results = [item.ll_sentence_bad < item.ll_sentence_good for item in items]
+    results = [(10**i.ll_sentence_bad) < (10**i.ll_sentence_good) for i in items]
 
     # The official BabyLM pipeline also uses stuff like Bleu, ChrF++, and more like that.
     # But, with how simple this system is, I don't think that is meaningful.
