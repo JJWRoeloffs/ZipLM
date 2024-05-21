@@ -123,7 +123,7 @@ impl BootstrapZipModel {
             Err(idx) => idx,
         };
         println!("Calcualted Log Likelyhood in: {:.2?}", before.elapsed());
-        (1.0 - (count_left as f64 / self.tstar.len() as f64)).log10()
+        (count_left as f64 / self.tstar.len() as f64).log10()
     }
 }
 
