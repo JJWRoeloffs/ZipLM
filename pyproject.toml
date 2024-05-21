@@ -11,7 +11,17 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dynamic = ["version"]
-dependencies = ["scikit-learn~=1.4.2"]
+dependencies = [
+  "scikit-learn~=1.4.2",
+  "transformers~=4.41.0",
+  "tokenizers~=0.19.1",
+  "datasets~=2.19.1",
+  "torch~=2.3.0",
+  "jax>=0.2.8",
+  "jaxlib>=0.1.59",
+  "flax~=0.8.3",
+  "optax>=0.0.9",
+]
 
 [project.optional-dependencies]
 tests = ["pytest"]
