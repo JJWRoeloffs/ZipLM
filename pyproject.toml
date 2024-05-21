@@ -21,6 +21,7 @@ dependencies = [
   "jaxlib>=0.1.59",
   "flax~=0.8.3",
   "optax>=0.0.9",
+  "sentencepiece~=0.2.0",
 ]
 
 [project.optional-dependencies]
