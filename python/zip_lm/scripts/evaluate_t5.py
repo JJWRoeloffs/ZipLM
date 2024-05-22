@@ -116,6 +116,7 @@ def calculate_log_likelihoods(
 
     with torch.no_grad():
         for item in items:
+            before = time.time()
             probs = get_scores_for_labels(
                 [item.sentence_good, item.sentence_bad], cola_labels, model, tokenizer
             ).exp()
@@ -126,6 +127,7 @@ def calculate_log_likelihoods(
             # The first value should be higher than the second. That's all we care about.
             item.ll_sentence_good = probs[0][0].item() + probs[1][1].item()
             item.ll_sentence_bad = probs[1][0].item() + probs[0][1].item()
+            print(f"Calculated Log-Likelyhoods in {time.time() - before:.2f} seconds")
 
 
 def run(args: Args) -> None:
