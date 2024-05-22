@@ -151,6 +151,9 @@ impl NGramModel {
     fn get_ll_many(&self, sentence: &Vec<Token>) -> f64 {
         // This uses the common approximation that
         // P(W1, W2, ..., Wn) ~ C(W1, W2, ..., Wn) / C(W2, ..., Wn)
+        // Technically, this calculation doesn't allow the model to predict the end token
+        // (Meaning suddenly stopped sentences aren't penalized,)
+        // But chaning that would be too much effort for now.
         let mut padded_sentence = sentence.clone();
         Token::pad_sentence(&mut padded_sentence, self.n);
         let mut res: f64 = 0.0;
