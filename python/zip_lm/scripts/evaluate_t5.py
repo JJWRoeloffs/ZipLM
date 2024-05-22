@@ -11,11 +11,11 @@ import torch
 import torch.nn.functional as F
 from transformers import T5Tokenizer, T5ForConditionalGeneration
 
-from zip_lm.eval import evaluate, get_testdata_subset
+from zip_lm.eval import evaluate, get_testdata_subset, basic_metrics
 from zip_lm.readdata import BlimpPyItem, get_blimp_data
 
 
-from typing import List, Literal
+from typing import List, Literal, Tuple
 
 
 @dataclass
@@ -45,9 +45,11 @@ def parse_args(args: List[str]) -> Args:
     return Args(arguments.seed, arguments.nr_per_type, arguments.model_name)
 
 
+# This function both modifies the input items, and returns actual results.
+# It's a mess, and I would not program like this if I didn't know this is the last code I have to write.
 def calculate_log_likelihoods(
     items: List[BlimpPyItem], model: T5ForConditionalGeneration, tokenizer: T5Tokenizer
-):
+) -> Tuple[List[bool], List[bool]]:
     cola_labels = ["acceptable", "unacceptable"]
 
     # Taken from https://discuss.huggingface.co/t/compute-log-probabilities-of-any-sequence-provided/11710/3
@@ -114,12 +116,20 @@ def calculate_log_likelihoods(
 
     model.eval()
 
+    results: List[bool] = []
+    golden: List[bool] = []
+
     with torch.no_grad():
         for item in items:
             before = time.time()
             probs = get_scores_for_labels(
                 [item.sentence_good, item.sentence_bad], cola_labels, model, tokenizer
             ).exp()
+            golden.append(True)
+            results.append(probs[0][0].item() > probs[0][1].item())
+            golden.append(False)
+            results.append(probs[1][0].item() > probs[1][1].item())
+
             # This is the most jank I'm willing to accept, but it works.
             # Despite the fields being called "ll_" passing the sum of normal
             # probabilities still leaves the evaluation code valid, despite the
@@ -128,6 +138,8 @@ def calculate_log_likelihoods(
             item.ll_sentence_good = probs[0][0].item() + probs[1][1].item()
             item.ll_sentence_bad = probs[1][0].item() + probs[0][1].item()
             print(f"Calculated Log-Likelyhoods in {time.time() - before:.2f} seconds")
+
+    return golden, results
 
 
 def run(args: Args) -> None:
@@ -148,7 +160,7 @@ def run(args: Args) -> None:
     print(f"Retrieved testing data in {time.time() - before:.2f} seconds")
 
     before = time.time()
-    calculate_log_likelihoods(inputdata, model, tokenizer)
+    golden, actual_results = calculate_log_likelihoods(inputdata, model, tokenizer)
     print(f"Calculated lls with {args.model_name} in {time.time()-before:.2f} seconds")
 
     results = {
@@ -156,6 +168,9 @@ def run(args: Args) -> None:
         "type": args.model_name,
         "evaluation_subset": args.nr_per_type,
         "results": evaluate(inputdata),
+        # These are more closely matched to how blimp would actually calcualte the results
+        # However, they do not seem like a good comparisont with how I dealt with the other models.
+        "actual_results": basic_metrics(golden, actual_results),
     }
     pprint(results)
 

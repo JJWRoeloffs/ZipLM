@@ -2,7 +2,9 @@ from sklearn.metrics import accuracy_score, f1_score, matthews_corrcoef, recall_
 
 from zip_lm.readdata import BlimpPyItem
 
-from typing import Dict, List
+from typing import Dict, List, TypeVar
+
+T = TypeVar("T")
 
 
 def evaluate(items: List[BlimpPyItem]) -> Dict[str, float]:
@@ -17,6 +19,15 @@ def evaluate(items: List[BlimpPyItem]) -> Dict[str, float]:
         "accuracy": accuracy_score(golden, results),
         "recall": recall_score(golden, results),
         "all_accuracy": all_accuracy(items),
+    }
+
+
+def basic_metrics(golden: List[T], results: List[T]) -> Dict[str, float]:
+    return {
+        "f1": f1_score(golden, results),
+        "matthews": matthews_corrcoef(golden, results),
+        "accuracy": accuracy_score(golden, results),
+        "recall": recall_score(golden, results),
     }
 
 
