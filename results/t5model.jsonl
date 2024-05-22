@@ -1,0 +1,1 @@
+{"seed": 42, "type": "t5-base", "evaluation_subset": 100, "results": {"f1": 0.7255734919286321, "matthews": 0.0, "accuracy": 0.5693333333333334, "recall": 0.5693333333333334, "all_accuracy": 0.0}}

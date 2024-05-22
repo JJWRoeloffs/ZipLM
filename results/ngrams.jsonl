@@ -1,0 +1,2 @@
+{"seed": 42, "type": "PyNGramModel", "params": {"n": 1}, "training_data": "10M", "evaluation_subset": 100, "results": {"f1": 0.6187845303867403, "matthews": 0.0, "accuracy": 0.448, "recall": 0.448, "all_accuracy": 0.06666666666666667}}
+{"seed": 42, "type": "PyNGramModel", "params": {"n": 2}, "training_data": "10M", "evaluation_subset": 100, "results": {"f1": 0.046875, "matthews": 0.0, "accuracy": 0.024, "recall": 0.024, "all_accuracy": 0.0}}

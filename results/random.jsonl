@@ -1,0 +1,1 @@
+{"seed": 42, "type": "RandomModel", "evaluation_subset": 100, "results": {"f1": 0.6547085201793722, "matthews": 0.0, "accuracy": 0.4866666666666667, "recall": 0.4866666666666667, "all_accuracy": 0.0}}
