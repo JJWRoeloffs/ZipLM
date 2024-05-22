@@ -7,7 +7,7 @@ from typing import Dict, List
 
 def evaluate(items: List[BlimpPyItem]) -> Dict[str, float]:
     golden = [True for _ in items]
-    results = [(10**i.ll_sentence_bad) < (10**i.ll_sentence_good) for i in items]
+    results = [i.ll_sentence_good > i.ll_sentence_bad for i in items]
 
     # The official BabyLM pipeline also uses stuff like Bleu, ChrF++, and more like that.
     # But, with how simple this system is, I don't think that is meaningful.
@@ -24,5 +24,5 @@ def evaluate(items: List[BlimpPyItem]) -> Dict[str, float]:
 def all_accuracy(items: List[BlimpPyItem]) -> float:
     types = {(i.field, i.linguistics_term) for i in items}
     groups = [[g for g in items if (g.field, g.linguistics_term) == i] for i in types]
-    scores = [all(i.ll_sentence_bad < i.ll_sentence_good for i in g) for g in groups]
+    scores = [all(i.ll_sentence_good > i.ll_sentence_bad for i in g) for g in groups]
     return accuracy_score([True for _ in scores], scores)
