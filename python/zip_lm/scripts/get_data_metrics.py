@@ -8,7 +8,7 @@ from collections import Counter
 from dataclasses import dataclass
 
 import nltk
-import pandas
+from pandas import DataFrame
 
 from zip_lm.readdata import PyDataItems, get_data_items
 from zip_lm.ngrams import pytokenize
@@ -95,7 +95,7 @@ def basic_info_to_latex(data_dict: Dict[str, Dict[str, Any]], to: Path) -> None:
         key: {k: v for k, v in val.items() if k != "common_tokens"}
         for key, val in data_dict.items()
     }
-    df = pandas.DataFrame.from_dict(data_dict).reset_index()
+    df = DataFrame.from_dict(data_dict).reset_index()
     df.to_latex(to, float_format="%.2f", index=False)
 
 
