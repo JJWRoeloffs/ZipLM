@@ -22,5 +22,23 @@ class BlimpPyItem:
         pair_id: int,
     ): ...
 
+class PyDataItems:
+    bnc_spoken: List[str]
+    childes: List[str]
+    gutenberg: List[str]
+    subtitiles: List[str]
+    simple_wiki: List[str]
+    switchboard: List[str]
+    def __init__(
+        self,
+        bnc_spoken: List[str],
+        childes: List[str],
+        gutenberg: List[str],
+        subtitiles: List[str],
+        simple_wiki: List[str],
+        switchboard: List[str],
+    ) -> None: ...
+
 def get_blimp_data(path: str) -> List[BlimpPyItem]: ...
 def get_sentence_corpus(path: str) -> PyCorpusSentences: ...
+def get_data_items(path: str) -> PyDataItems: ...

@@ -1,4 +1,10 @@
-from zip_lm.readdata import BlimpPyItem, get_blimp_data, get_sentence_corpus
+from zip_lm.readdata import (
+    BlimpPyItem,
+    PyDataItems,
+    get_blimp_data,
+    get_sentence_corpus,
+    get_data_items,
+)
 
 
 def test_get_blimpdata():
@@ -32,3 +38,25 @@ def test_blimpitem():
 def test_get_sentence_corpus():
     corpus = get_sentence_corpus("data/train_10M")
     assert all(isinstance(sentence, str) for sentence in corpus.items())
+
+
+def test_get_data_items():
+    items = get_data_items("data/train_10M")
+    assert all(isinstance(sentence, str) for sentence in items.bnc_spoken)
+    assert all(isinstance(sentence, str) for sentence in items.childes)
+    assert all(isinstance(sentence, str) for sentence in items.gutenberg)
+    assert all(isinstance(sentence, str) for sentence in items.subtitiles)
+    assert all(isinstance(sentence, str) for sentence in items.simple_wiki)
+    assert all(isinstance(sentence, str) for sentence in items.switchboard)
+
+
+def test_datitems():
+    items = PyDataItems(
+        ["This is a test sentence", "This is another test sentence"],
+        ["This is a test sentence", "This is another test sentence"],
+        ["This is a test sentence", "This is another test sentence"],
+        ["This is a test sentence", "This is another test sentence"],
+        ["This is a test sentence", "This is another test sentence"],
+        ["This is a test sentence", "This is another test sentence"],
+    )
+    assert items.bnc_spoken[0] == "This is a test sentence"

@@ -156,4 +156,57 @@ pub mod python {
             .to_corpus();
         Ok(PyCorpusSentences { inner })
     }
+
+    impl DataItems<Vec<String>> {
+        fn to_python(self) -> PyDataItems {
+            PyDataItems {
+                bnc_spoken: self.bnc_spoken,
+                childes: self.childes,
+                gutenberg: self.gutenberg,
+                subtitiles: self.subtitiles,
+                simple_wiki: self.simple_wiki,
+                switchboard: self.switchboard,
+            }
+        }
+    }
+
+    #[derive(Debug, Default, Clone)]
+    #[pyclass(get_all, set_all)]
+    pub struct PyDataItems {
+        pub bnc_spoken: Vec<String>,
+        pub childes: Vec<String>,
+        pub gutenberg: Vec<String>,
+        pub subtitiles: Vec<String>,
+        pub simple_wiki: Vec<String>,
+        pub switchboard: Vec<String>,
+    }
+
+    #[pymethods]
+    impl PyDataItems {
+        #[new]
+        fn new(
+            bnc_spoken: Vec<String>,
+            childes: Vec<String>,
+            gutenberg: Vec<String>,
+            subtitiles: Vec<String>,
+            simple_wiki: Vec<String>,
+            switchboard: Vec<String>,
+        ) -> Self {
+            Self {
+                bnc_spoken,
+                childes,
+                gutenberg,
+                subtitiles,
+                simple_wiki,
+                switchboard,
+            }
+        }
+    }
+
+    #[pyfunction]
+    pub fn get_data_items(path: String) -> PyResult<PyDataItems> {
+        Ok(DataItems::from_dir(Path::new(&path))
+            .map_err(|_| PyIOError::new_err(format!("Could not read from {path}")))?
+            .to_python())
+    }
 }
