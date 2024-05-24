@@ -55,9 +55,11 @@ def parse_args(args: List[str]) -> Args:
 
 
 def get_zipf(data: List[str], cap: int = 1000) -> List[float]:
-    sentences = [s for i in data for s in nltk.sent_tokenize(i)]
-    tokens = [t for s in sentences for t in nltk.word_tokenize(s) if t.isalpha()]
+    sents = [s for i in data for s in nltk.sent_tokenize(i)]
+    # Yes, you have to pass .lower(): https://www.nltk.org/api/nltk.probability.FreqDist.html
+    tokens = [t.lower() for s in sents for t in nltk.word_tokenize(s) if t.isalpha()]
 
+    # Who needs NLTK.FreqDist when you have Counter in std? :P
     counts = Counter(tokens).most_common(cap)
     return [count / len(data) for _, count in counts]
 

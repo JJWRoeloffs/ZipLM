@@ -50,7 +50,8 @@ def parse_args(args: List[str]) -> Args:
 def get_basic_info_individual(corpus: List[str]) -> Dict[str, Any]:
     words_naive = [t for i in corpus for t in pytokenize(i)]
     sentences_text = [s for i in corpus for s in nltk.sent_tokenize(i)]
-    tokens = [t for s in sentences_text for t in nltk.word_tokenize(s)]
+    # Yes, you have to pass .lower(): https://www.nltk.org/api/nltk.probability.FreqDist.html
+    tokens = [t.lower() for s in sentences_text for t in nltk.word_tokenize(s)]
     tagged = nltk.pos_tag(tokens)
 
     return {
