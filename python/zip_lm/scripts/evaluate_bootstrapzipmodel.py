@@ -35,10 +35,12 @@ def parse_args(args: List[str]) -> Args:
         prog="evaluate_bootsrtapzipmodel",
         description="The script that does the evaluation of the bootstrap model",
     )
-    parser.add_argument("seed", help="The seed to use for the rng")
-    parser.add_argument("nr_per_type", help="The amount of blimp items to get per type")
-    parser.add_argument("b", help="The b used in the bootstrap model")
-    parser.add_argument("n", help="The n used in the bootstrap model")
+    parser.add_argument("seed", help="The seed to use for the rng", type=int)
+    parser.add_argument(
+        "nr_per_type", help="The amount of blimp items to get per type", type=int
+    )
+    parser.add_argument("b", help="The b used in the bootstrap model", type=int)
+    parser.add_argument("n", help="The n used in the bootstrap model", type=int)
     parser.add_argument(
         "-t",
         help="The agrevation method used in the softmax model",
@@ -58,10 +60,10 @@ def parse_args(args: List[str]) -> Args:
     )
     arguments = parser.parse_args(args)
     return Args(
-        int(arguments.seed),
-        int(arguments.nr_per_type),
-        int(arguments.b),
-        int(arguments.n),
+        arguments.seed,
+        arguments.nr_per_type,
+        arguments.b,
+        arguments.n,
         arguments.t,
         arguments.data,
     )

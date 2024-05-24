@@ -34,9 +34,13 @@ def parse_args(args: List[str]) -> Args:
         prog="evaluate_softmaxzipmodel",
         description="The script that does the evaluation of the softmax model",
     )
-    parser.add_argument("seed", help="The seed to use for the rng")
-    parser.add_argument("nr_per_type", help="The amount of blimp items to get per type")
-    parser.add_argument("sample_size", help="The sample size used in the softmax model")
+    parser.add_argument("seed", help="The seed to use for the rng", type=int)
+    parser.add_argument(
+        "nr_per_type", help="The amount of blimp items to get per type", type=int
+    )
+    parser.add_argument(
+        "sample_size", help="The sample size used in the softmax model", type=int
+    )
     parser.add_argument(
         "-t",
         help="The agrevation method used in the softmax model",
@@ -56,9 +60,9 @@ def parse_args(args: List[str]) -> Args:
     )
     arguments = parser.parse_args(args)
     return Args(
-        int(arguments.seed),
-        int(arguments.nr_per_type),
-        int(arguments.sample_size),
+        arguments.seed,
+        arguments.nr_per_type,
+        arguments.sample_size,
         arguments.t,
         arguments.data,
     )

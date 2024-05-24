@@ -30,9 +30,11 @@ def parse_args(args: List[str]) -> Args:
         prog="evaluate_ngrams",
         description="The script that does the evaluation of the ngrams model",
     )
-    parser.add_argument("seed", help="The seed to use for the rng")
-    parser.add_argument("nr_per_type", help="The amount of blimp items to get per type")
-    parser.add_argument("n", help="The n of the n-gram model")
+    parser.add_argument("seed", help="The seed to use for the rng", type=int)
+    parser.add_argument(
+        "nr_per_type", help="The amount of blimp items to get per type", type=int
+    )
+    parser.add_argument("n", help="The n of the n-gram model", type=int)
     parser.add_argument(
         "-d",
         "--data",
@@ -43,12 +45,7 @@ def parse_args(args: List[str]) -> Args:
         required=False,
     )
     arguments = parser.parse_args(args)
-    return Args(
-        int(arguments.seed),
-        int(arguments.nr_per_type),
-        int(arguments.n),
-        arguments.data,
-    )
+    return Args(arguments.seed, arguments.nr_per_type, arguments.n, arguments.data)
 
 
 def run(args: Args) -> None:

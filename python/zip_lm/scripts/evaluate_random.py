@@ -27,13 +27,12 @@ def parse_args(args: List[str]) -> Args:
         prog="evaluate_random",
         description="The script that does some benchmark valuation on random lls",
     )
-    parser.add_argument("seed", help="The seed to use for the rng")
-    parser.add_argument("nr_per_type", help="The amount of blimp items to get per type")
-    arguments = parser.parse_args(args)
-    return Args(
-        int(arguments.seed),
-        int(arguments.nr_per_type),
+    parser.add_argument("seed", help="The seed to use for the rng", type=int)
+    parser.add_argument(
+        "nr_per_type", help="The amount of blimp items to get per type", type=int
     )
+    arguments = parser.parse_args(args)
+    return Args(arguments.seed, arguments.nr_per_type)
 
 
 def run(args: Args) -> None:
