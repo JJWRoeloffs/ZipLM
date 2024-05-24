@@ -4,6 +4,7 @@ import argparse
 from pathlib import Path
 from pprint import pprint
 from statistics import mean
+from itertools import permutations
 from collections import Counter
 from dataclasses import dataclass
 
@@ -13,13 +14,14 @@ from pandas import DataFrame
 from zip_lm.readdata import PyDataItems, get_data_items
 from zip_lm.ngrams import pytokenize
 
-from typing import Any, Dict, List, Literal
+from typing import Any, Dict, List, Literal, Tuple
 
 
 @dataclass
 class Args:
     data: Literal["10M", "100M"]
     latex: bool
+    most_common: int
 
 
 def parse_args(args: List[str]) -> Args:
@@ -37,6 +39,15 @@ def parse_args(args: List[str]) -> Args:
         required=False,
     )
     parser.add_argument(
+        "-m",
+        "--most_common",
+        help="How many of the biggest differences to show",
+        type=int,
+        default=10,
+        nargs="?",
+        required=False,
+    )
+    parser.add_argument(
         "--latex",
         action="store_true",
         help="If passed, a latex table is saved with the results",
@@ -44,7 +55,7 @@ def parse_args(args: List[str]) -> Args:
         required=False,
     )
     arguments = parser.parse_args(args)
-    return Args(arguments.data, arguments.latex)
+    return Args(arguments.data, arguments.latex, arguments.most_common)
 
 
 def get_basic_info_individual(corpus: List[str]) -> Dict[str, Any]:
@@ -100,12 +111,48 @@ def basic_info_to_latex(data_dict: Dict[str, Dict[str, Any]], to: Path) -> None:
     df.to_latex(to, float_format="%.2f", index=False)
 
 
+def compare_frequencies(
+    freq1: nltk.FreqDist, freq2: nltk.FreqDist, top_n: int = 10
+) -> List[Tuple[str, str]]:
+    comparisonts = {
+        word: freq1[word] / freq1.N() - freq2[word] / freq2.N()
+        for word in set(freq1.keys()).union(set(freq2.keys()))
+    }
+    # We don't use an abs() here, because we have both A-B and B-A
+    res = sorted(comparisonts.items(), key=lambda i: i[1], reverse=True)[:top_n]
+    return [(i, f"{v:.3f}") for i, v in res]
+
+
+def get_frequency_info(data: PyDataItems, top_n: int = 10) -> Dict[str, Any]:
+    nltk.download("punkt")
+    nltk.download("brown")
+
+    def token_freqdist(items: List[str]) -> nltk.FreqDist:
+        return nltk.FreqDist(t.lower() for i in items for t in nltk.word_tokenize(i))
+
+    items = {
+        "brown": token_freqdist(nltk.corpus.brown.words()),
+        "bnc_spoken": token_freqdist(data.bnc_spoken),
+        "childes": token_freqdist(data.childes),
+        "gutenberg": token_freqdist(data.gutenberg),
+        "subtitiles": token_freqdist(data.subtitiles),
+        "simple_wiki": token_freqdist(data.simple_wiki),
+        "switchboard": token_freqdist(data.switchboard),
+    }
+    return {
+        f"{kv1[0]}-{kv2[0]}": compare_frequencies(kv1[1], kv2[1], top_n)
+        for kv1, kv2 in permutations(items.items(), r=2)
+    }
+
+
 def run(args: Args):
     data_dir = Path() / "data" / f"train_{args.data}"
     data = get_data_items(str(data_dir))
+    frequency_info = get_frequency_info(data, args.most_common)
     data_dict = get_basic_info(data)
 
     pprint(data_dict)
+    pprint(frequency_info)
 
     results_dir = Path() / "results"
     results_dir.mkdir(exist_ok=True)
@@ -113,9 +160,11 @@ def run(args: Args):
     if args.latex:
         basic_info_to_latex(data_dict, results_dir / "basic_data.tex")
 
+    results = {"basic_info": data_dict, "frequency_info": frequency_info}
+
     results_file = results_dir / "basic_data.jsonl"
     with results_file.open("a", encoding="utf-8") as f:
-        json.dump(data_dict, f)
+        json.dump(results, f)
         f.write("\n")
 
 
